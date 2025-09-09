@@ -2,7 +2,6 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
-import cors from 'cors';
 
 const app = express();
 app.use(bodyParser.json());
@@ -13,7 +12,7 @@ const allowedOrigins = [
   'https://timlewisdev.github.io'
 ];
 
-// CORS middleware
+// CORS middleware with preflight handling
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
