@@ -3,57 +3,85 @@
 <head>
   <meta charset="utf-8">
   <title>Import Markdown</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    button { margin-top: 10px; padding: 8px 12px; font-size: 14px; }
+  </style>
 </head>
 <body>
+  <h3>Import Markdown as Trello Cards</h3>
   <input type="file" id="fileInput" accept=".md">
+  <br>
+  <button id="createBtn" disabled>Create Cards</button>
+
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
   <script>
     const t = window.TrelloPowerUp.iframe();
+    let markdownContent = '';
 
-    document.getElementById('fileInput').addEventListener('change', function(event) {
+    const fileInput = document.getElementById('fileInput');
+    const createBtn = document.getElementById('createBtn');
+
+    // Load the Markdown file
+    fileInput.addEventListener('change', function(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
       reader.onload = function(e) {
-        const markdown = e.target.result;
-        parseAndCreateCards(markdown);
+        markdownContent = e.target.result;
+        createBtn.disabled = false; // enable button after file loaded
       };
       reader.readAsText(file);
     });
 
-    async function parseAndCreateCards(markdown) {
-  const lines = markdown.split('\n');
-  let currentList = null;
+    // Button click to create cards
+    createBtn.addEventListener('click', async function() {
+      if (!markdownContent) return;
 
-  const boardData = await t.board('lists');
-  const lists = boardData.lists;
+      try {
+        const lines = markdownContent.split('\n');
+        let currentListId = null;
 
-  for (let line of lines) {
-    line = line.trim();
-    if (!line) continue;
+        // Get all board lists
+        const boardData = await t.board('lists');
+        const lists = boardData.lists;
 
-    if (line.startsWith('#')) {
-      const listName = line.replace(/^#+\s*/, '');
-      const existingList = lists.find(l => l.name === listName);
-      if (existingList) {
-        currentList = existingList.id;
-      } else {
-        // fallback: use first list if creation fails
-        currentList = lists[0].id;
+        for (let line of lines) {
+          line = line.trim();
+          if (!line) continue;
+
+          // Headings become lists
+          if (line.startsWith('#')) {
+            const listName = line.replace(/^#+\s*/, '');
+            let list = lists.find(l => l.name === listName);
+
+            if (!list) {
+              // If list doesn't exist, fallback to first list
+              // Trello Power-Up API can't create lists directly, so use first list
+              list = lists[0];
+            }
+            currentListId = list.id;
+          }
+
+          // List items become cards
+          else if ((line.startsWith('- ') || line.startsWith('* '))) {
+            if (!currentListId) currentListId = lists[0].id; // default list
+            const cardName = line.slice(2);
+            await t.cards.create({
+              name: cardName,
+              idList: currentListId
+            });
+          }
+        }
+
+        alert('Markdown imported successfully!');
+        t.closePopup();
+      } catch (err) {
+        console.error(err);
+        alert('Error importing cards. See console for details.');
       }
-    }
-    else if ((line.startsWith('- ') || line.startsWith('* '))) {
-      if (!currentList) currentList = lists[0].id;
-      const cardName = line.slice(2);
-      await t.cards.create({ name: cardName, idList: currentList });
-    }
-  }
-
-  alert('Markdown imported!');
-  t.closePopup();
-}
-
+    });
   </script>
 </body>
 </html>
