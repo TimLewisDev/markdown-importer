@@ -43,9 +43,8 @@
         const lines = markdownContent.split('\n');
         let currentListId = null;
 
-        // Get all board lists
-        const boardData = await t.board('lists');
-        const lists = boardData.lists;
+        // Get all board lists correctly
+        const lists = await t.lists('all');
 
         for (let line of lines) {
           line = line.trim();
@@ -58,7 +57,6 @@
 
             if (!list) {
               // If list doesn't exist, fallback to first list
-              // Trello Power-Up API can't create lists directly, so use first list
               list = lists[0];
             }
             currentListId = list.id;
