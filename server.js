@@ -11,8 +11,8 @@ app.use(bodyParser.json());
 app.use(cors({ origin: 'https://trello.com' }));
 
 // Trello Power-Up credentials
-const TRELLO_KEY = '759d5e2164a9420a53c5672a04d92fb0';
-const TRELLO_TOKEN = '77bcaa1c330cef0f2cdf839a446d17b69d67923cc95604ed69f2c2895c372c4c';
+const TRELLO_KEY = process.env.TRELLO_KEY;
+const TRELLO_TOKEN = process.env.TRELLO_TOKEN;
 
 // Helper to create a Trello list
 async function createList(boardId, name) {
