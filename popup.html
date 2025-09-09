@@ -23,37 +23,37 @@
     });
 
     async function parseAndCreateCards(markdown) {
-      const lines = markdown.split('\n');
-      let currentList = null;
+  const lines = markdown.split('\n');
+  let currentList = null;
 
-      for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
+  const boardData = await t.board('lists');
+  const lists = boardData.lists;
 
-        // Heading becomes a list
-        if (line.startsWith('#')) {
-          const listName = line.replace(/^#+\s*/, '');
-          const lists = await t.board('lists');
-          const existingList = lists.lists.find(l => l.name === listName);
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
 
-          if (existingList) {
-            currentList = existingList.id;
-          } else {
-            const newList = await t.post('/lists', { name: listName });
-            currentList = newList.id;
-          }
-        }
-
-        // Lines starting with - or * become cards
-        else if ((line.startsWith('- ') || line.startsWith('* ')) && currentList) {
-          const cardName = line.slice(2);
-          await t.post(`/cards`, { name: cardName, idList: currentList });
-        }
+    if (line.startsWith('#')) {
+      const listName = line.replace(/^#+\s*/, '');
+      const existingList = lists.find(l => l.name === listName);
+      if (existingList) {
+        currentList = existingList.id;
+      } else {
+        // fallback: use first list if creation fails
+        currentList = lists[0].id;
       }
-
-      alert('Markdown imported!');
-      t.closePopup();
     }
+    else if ((line.startsWith('- ') || line.startsWith('* '))) {
+      if (!currentList) currentList = lists[0].id;
+      const cardName = line.slice(2);
+      await t.cards.create({ name: cardName, idList: currentList });
+    }
+  }
+
+  alert('Markdown imported!');
+  t.closePopup();
+}
+
   </script>
 </body>
 </html>
