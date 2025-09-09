@@ -6,11 +6,33 @@ import cors from 'cors';
 
 const app = express();
 app.use(bodyParser.json());
-app.use(cors()); // allow requests from your Power-Up iframe
+
+// Allow requests from Trello iframe
+app.use(cors({ origin: 'https://trello.com' }));
 
 // Trello Power-Up credentials
 const TRELLO_KEY = '759d5e2164a9420a53c5672a04d92fb0';
 const TRELLO_TOKEN = '77bcaa1c330cef0f2cdf839a446d17b69d67923cc95604ed69f2c2895c372c4c';
+
+// Helper to create a Trello list
+async function createList(boardId, name) {
+  const res = await fetch(
+    `https://api.trello.com/1/lists?name=${encodeURIComponent(name)}&idBoard=${boardId}&key=${TRELLO_KEY}&token=${TRELLO_TOKEN}`,
+    { method: 'POST' }
+  );
+  if (!res.ok) throw new Error(`Failed to create list "${name}": ${await res.text()}`);
+  return res.json();
+}
+
+// Helper to create a Trello card
+async function createCard(listId, name) {
+  const res = await fetch(
+    `https://api.trello.com/1/cards?name=${encodeURIComponent(name)}&idList=${listId}&key=${TRELLO_KEY}&token=${TRELLO_TOKEN}`,
+    { method: 'POST' }
+  );
+  if (!res.ok) throw new Error(`Failed to create card "${name}": ${await res.text()}`);
+  return res.json();
+}
 
 // Endpoint to import Markdown
 app.post('/import-markdown', async (req, res) => {
@@ -21,46 +43,35 @@ app.post('/import-markdown', async (req, res) => {
   }
 
   try {
-    // Fetch existing lists on the board
+    // Fetch existing lists
     const listsRes = await fetch(
       `https://api.trello.com/1/boards/${boardId}/lists?key=${TRELLO_KEY}&token=${TRELLO_TOKEN}`
     );
+    if (!listsRes.ok) throw new Error(await listsRes.text());
     const lists = await listsRes.json();
 
-    let currentListId = lists[0]?.id; // fallback to first list
-
+    let currentListId = lists[0]?.id;
     const lines = markdown.split('\n');
 
     for (let line of lines) {
       line = line.trim();
       if (!line) continue;
 
-      // Headings become lists
+      // Heading -> list
       if (line.startsWith('#')) {
         const listName = line.replace(/^#+\s*/, '');
         let list = lists.find(l => l.name === listName);
-
         if (!list) {
-          // Create new list
-          const createListRes = await fetch(
-            `https://api.trello.com/1/lists?name=${encodeURIComponent(listName)}&idBoard=${boardId}&key=${TRELLO_KEY}&token=${TRELLO_TOKEN}`,
-            { method: 'POST' }
-          );
-          list = await createListRes.json();
+          list = await createList(boardId, listName);
           lists.push(list);
         }
         currentListId = list.id;
       }
-
-      // List items become cards
+      // Bullet -> card
       else if (line.startsWith('- ') || line.startsWith('* ')) {
-        if (!currentListId) currentListId = lists[0].id;
-        const cardName = line.slice(2);
-
-        await fetch(
-          `https://api.trello.com/1/cards?name=${encodeURIComponent(cardName)}&idList=${currentListId}&key=${TRELLO_KEY}&token=${TRELLO_TOKEN}`,
-          { method: 'POST' }
-        );
+        if (!currentListId) currentListId = lists[0]?.id;
+        const cardName = line.slice(2).trim();
+        await createCard(currentListId, cardName);
       }
     }
 
@@ -72,4 +83,5 @@ app.post('/import-markdown', async (req, res) => {
 });
 
 // Start server
-app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+const PORT = 3000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
