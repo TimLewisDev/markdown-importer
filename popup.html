@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Import Markdown</title>
+</head>
+<body>
+  <input type="file" id="fileInput" accept=".md">
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <script>
+    const t = window.TrelloPowerUp.iframe();
+
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const markdown = e.target.result;
+        parseAndCreateCards(markdown);
+      };
+      reader.readAsText(file);
+    });
+
+    async function parseAndCreateCards(markdown) {
+      const lines = markdown.split('\n');
+      let currentList = null;
+
+      for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+
+        // Heading becomes a list
+        if (line.startsWith('#')) {
+          const listName = line.replace(/^#+\s*/, '');
+          const lists = await t.board('lists');
+          const existingList = lists.lists.find(l => l.name === listName);
+
+          if (existingList) {
+            currentList = existingList.id;
+          } else {
+            const newList = await t.post('/lists', { name: listName });
+            currentList = newList.id;
+          }
+        }
+
+        // Lines starting with - or * become cards
+        else if ((line.startsWith('- ') || line.startsWith('* ')) && currentList) {
+          const cardName = line.slice(2);
+          await t.post(`/cards`, { name: cardName, idList: currentList });
+        }
+      }
+
+      alert('Markdown imported!');
+      t.closePopup();
+    }
+  </script>
+</body>
+</html>
