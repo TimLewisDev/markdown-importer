@@ -8,15 +8,53 @@
 <body>
   <script>
     window.TrelloPowerUp.initialize({
+
+      // Card Buttons
       'card-buttons': function (t, options) {
         return [{
           icon: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
           text: 'Hello',
           callback: function(t) {
-            alert('Hello from my Power-Up!');
+            alert('Hello from card button!');
           }
         }];
+      },
+
+      // Board Buttons
+      'board-buttons': function(t, options) {
+        return [{
+          icon: 'https://cdn-icons-png.flaticon.com/512/1828/1828817.png',
+          text: 'Board Test',
+          callback: function(t) {
+            alert('Hello from board button!');
+          }
+        }];
+      },
+
+      // Card Badges
+      'card-badges': function(t, options) {
+        return [{
+          text: 'Test Badge',
+          color: 'green',
+          callback: function(t) {
+            alert('Badge clicked!');
+          }
+        }];
+      },
+
+      // Card Back Section
+      'card-back-section': function(t, options) {
+        return {
+          title: 'Test Section',
+          icon: 'https://cdn-icons-png.flaticon.com/512/1828/1828817.png',
+          content: {
+            type: 'iframe',
+            url: 'https://your-username.github.io/trello-powerup/', 
+            height: 50
+          }
+        };
       }
+
     });
   </script>
 </body>
