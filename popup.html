@@ -11,8 +11,7 @@
 </head>
 <body>
   <h3>Import Markdown as Trello Cards</h3>
-  <!-- Version label -->
-  <div class="version">Version: 0.0.1</div>
+  <div class="version">Version: 0.0.2</div>
 
   <input type="file" id="fileInput" accept=".md">
   <br>
@@ -26,62 +25,42 @@
     const fileInput = document.getElementById('fileInput');
     const createBtn = document.getElementById('createBtn');
 
-    // Load the Markdown file
     fileInput.addEventListener('change', function(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
         markdownContent = e.target.result;
-        createBtn.disabled = false; // enable button after file loaded
+        createBtn.disabled = false;
       };
       reader.readAsText(file);
     });
 
-    // Button click to create cards
     createBtn.addEventListener('click', async function() {
       if (!markdownContent) return;
 
       try {
-        const lines = markdownContent.split('\n');
-        let currentListId = null;
+        // Get the current board id
+        const board = await t.board('id');
 
-        // Get all board lists correctly
-        const lists = await t.lists('all');
+        // Send Markdown to backend
+        const response = await fetch('http://localhost:3000/import-markdown', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ boardId: board.id, markdown: markdownContent })
+        });
 
-        for (let line of lines) {
-          line = line.trim();
-          if (!line) continue;
-
-          // Headings become lists
-          if (line.startsWith('#')) {
-            const listName = line.replace(/^#+\s*/, '');
-            let list = lists.find(l => l.name === listName);
-
-            if (!list) {
-              // If list doesn't exist, fallback to first list
-              list = lists[0];
-            }
-            currentListId = list.id;
-          }
-
-          // List items become cards
-          else if ((line.startsWith('- ') || line.startsWith('* '))) {
-            if (!currentListId) currentListId = lists[0].id; // default list
-            const cardName = line.slice(2);
-            await t.cards.create({
-              name: cardName,
-              idList: currentListId
-            });
-          }
+        const data = await response.json();
+        if (data.success) {
+          alert('Markdown imported successfully!');
+          t.closePopup();
+        } else {
+          alert('Error importing cards: ' + (data.error || 'Unknown'));
         }
 
-        alert('Markdown imported successfully!');
-        t.closePopup();
       } catch (err) {
         console.error(err);
-        alert('Error importing cards. See console for details.');
+        alert('Error importing cards. See console.');
       }
     });
   </script>
