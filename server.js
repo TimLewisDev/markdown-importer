@@ -7,10 +7,25 @@ import cors from 'cors';
 const app = express();
 app.use(bodyParser.json());
 
-// Allow requests from Trello iframe
-app.use(cors({ origin: 'https://trello.com' }));
+// Allowed origins for CORS
+const allowedOrigins = [
+  'https://trello.com',
+  'https://timlewisdev.github.io'
+];
 
-// Trello Power-Up credentials
+app.use(cors({
+  origin: function(origin, callback) {
+    // allow requests with no origin (e.g., Postman or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy does not allow access from origin: ${origin}`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+}));
+
+// Trello API credentials from environment variables
 const TRELLO_KEY = process.env.TRELLO_KEY;
 const TRELLO_TOKEN = process.env.TRELLO_TOKEN;
 
