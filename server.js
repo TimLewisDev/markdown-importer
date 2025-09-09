@@ -7,23 +7,26 @@ import cors from 'cors';
 const app = express();
 app.use(bodyParser.json());
 
-// Allowed origins for CORS
+// Allowed origins
 const allowedOrigins = [
   'https://trello.com',
   'https://timlewisdev.github.io'
 ];
 
-app.use(cors({
-  origin: function(origin, callback) {
-    // allow requests with no origin (e.g., Postman or curl)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy does not allow access from origin: ${origin}`;
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
+// CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   }
-}));
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Trello API credentials from environment variables
 const TRELLO_KEY = process.env.TRELLO_KEY;
