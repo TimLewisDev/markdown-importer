@@ -7,7 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 
 const TRELLO_KEY = '759d5e2164a9420a53c5672a04d92fb0';
-const TRELLO_TOKEN = 'YOUR_TRELLO_TOKEN';
+const TRELLO_TOKEN = '77bcaa1c330cef0f2cdf839a446d17b69d67923cc95604ed69f2c2895c372c4c';
 
 app.post('/import-markdown', async (req, res) => {
   const { boardId, markdown } = req.body;
