@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Trello Power-Up</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+</head>
+<body>
+  <script>
+    window.TrelloPowerUp.initialize({
+      'card-buttons': function (t, options) {
+        return [{
+          icon: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
+          text: 'Hello',
+          callback: function(t) {
+            alert('Hello from my Power-Up!');
+          }
+        }];
+      }
+    });
+  </script>
+</body>
+</html>
