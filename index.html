@@ -2,57 +2,27 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Trello Power-Up</title>
+  <title>Trello Markdown Importer</title>
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
 </head>
 <body>
   <script>
     window.TrelloPowerUp.initialize({
 
-      // Card Buttons
-      'card-buttons': function (t, options) {
-        return [{
-          icon: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
-          text: 'Hello',
-          callback: function(t) {
-            alert('Hello from card button!');
-          }
-        }];
-      },
-
-      // Board Buttons
       'board-buttons': function(t, options) {
         return [{
           icon: 'https://cdn-icons-png.flaticon.com/512/1828/1828817.png',
-          text: 'Board Test',
+          text: 'Import Markdown',
           callback: function(t) {
-            alert('Hello from board button!');
+            
+            // Open popup to choose markdown file
+            return t.popup({
+              title: 'Import Markdown',
+              url: 'popup.html',
+              height: 200
+            });
           }
         }];
-      },
-
-      // Card Badges
-      'card-badges': function(t, options) {
-        return [{
-          text: 'Test Badge',
-          color: 'green',
-          callback: function(t) {
-            alert('Badge clicked!');
-          }
-        }];
-      },
-
-      // Card Back Section
-      'card-back-section': function(t, options) {
-        return {
-          title: 'Test Section',
-          icon: 'https://cdn-icons-png.flaticon.com/512/1828/1828817.png',
-          content: {
-            type: 'iframe',
-            url: 'https://timlewisdev.github.io/markdown-importer/', 
-            height: 200
-          }
-        };
       }
 
     });
