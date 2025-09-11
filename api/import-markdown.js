@@ -67,6 +67,17 @@ export default async function handler(req, res) {
     if (!listsRes.ok) throw new Error(await listsRes.text());
     const lists = await listsRes.json();
 
+    // Resolve canonical 24-char board ID for write operations
+    let canonicalBoardId = lists[0]?.idBoard;
+    if (!canonicalBoardId) {
+      const boardRes = await fetch(
+        `https://api.trello.com/1/boards/${boardId}?fields=id&key=${TRELLO_KEY}&token=${TRELLO_TOKEN}`
+      );
+      if (!boardRes.ok) throw new Error(await boardRes.text());
+      const board = await boardRes.json();
+      canonicalBoardId = board.id;
+    }
+
     let currentListId = lists[0]?.id;
     const lines = markdown.split('\n');
 
@@ -78,7 +89,7 @@ export default async function handler(req, res) {
         const listName = line.replace(/^#+\s*/, '');
         let list = lists.find(l => l.name === listName);
         if (!list) {
-          list = await createList(boardId, listName);
+          list = await createList(canonicalBoardId, listName);
           lists.push(list);
         }
         currentListId = list.id;
