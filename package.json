@@ -12,6 +12,9 @@
     "body-parser": "^1.20.2"
   },
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "keywords": ["trello", "markdown", "power-up"],
   "author": "",
   "license": "MIT"
