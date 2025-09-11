@@ -44,7 +44,7 @@
         const board = await t.board('id');
 
         // Send Markdown to backend
-        const response = await fetch('https://markdown-importer.vercel.app/import-markdown', {
+        const response = await fetch('https://markdown-importer.vercel.app/api/import-markdown', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ boardId: board.id, markdown: markdownContent })
